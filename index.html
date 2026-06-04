@@ -753,48 +753,31 @@
 
     function saveEntries() {}
 
-    function loadSheetEntries() {
-      if (!SHEET_WEB_APP_URL) return Promise.resolve(null);
-
-      return new Promise((resolve, reject) => {
-        const callbackName = `feiMiaoSheetCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-        const script = document.createElement("script");
-        const separator = SHEET_WEB_APP_URL.includes("?") ? "&" : "?";
-
-        window[callbackName] = (payload) => {
-          cleanup();
-          resolve(payload);
-        };
-
-        function cleanup() {
-          delete window[callbackName];
-          script.remove();
-        }
-
-        script.onerror = () => {
-          cleanup();
-          reject(new Error("Unable to load Google Sheet data."));
-        };
-
-        script.src = `${SHEET_WEB_APP_URL}${separator}callback=${callbackName}&_=${Date.now()}`;
-        document.head.appendChild(script);
+    // ★ 修正：改用 fetch + credentials:'omit'，避免帶入 Google cookie 導致帳號路由失敗
+    async function loadSheetEntries() {
+      if (!SHEET_WEB_APP_URL) return null;
+      const sep = SHEET_WEB_APP_URL.includes("?") ? "&" : "?";
+      const response = await fetch(`${SHEET_WEB_APP_URL}${sep}_=${Date.now()}`, {
+        credentials: "omit"
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
     }
 
     async function hydrateFromSheet() {
       try {
-        cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u4e2d";
+        cloudStatus.textContent = "雲端載入中";
         const payload = await loadSheetEntries();
         if (!payload?.ok || !Array.isArray(payload.rows)) {
-          cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u5931\u6557";
+          cloudStatus.textContent = "雲端載入失敗";
           return;
         }
 
         entries = normalizeEntries(payload.rows);
         render();
-        cloudStatus.textContent = `\u96f2\u7aef\u5df2\u8f09\u5165 ${entries.length} \u7b46`;
+        cloudStatus.textContent = `雲端已載入 ${entries.length} 筆`;
       } catch (error) {
-        cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u5931\u6557";
+        cloudStatus.textContent = "雲端載入失敗";
         console.warn("Google Sheet load skipped:", error);
       }
     }
@@ -810,7 +793,7 @@
         categoryLabel: category.label,
         subcategory: entry.subcategory,
         payment: entry.payment,
-        paymentLabel: payments[entry.payment] || "\u73fe\u91d1",
+        paymentLabel: payments[entry.payment] || "現金",
         date: entry.date,
         note: entry.note,
         createdAt: entry.createdAt,
