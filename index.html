@@ -587,7 +587,7 @@
     <section class="panel section">
       <div class="section-head">
         <h2>新增一筆</h2>
-        <span class="pill">雲端資料庫</span>
+        <span id="cloudStatus" class="pill">雲端載入中</span>
       </div>
       <form id="entryForm">
         <div class="type-toggle" aria-label="收支類型">
@@ -723,6 +723,7 @@
     const entryList = document.querySelector("#entryList");
     const emptyState = document.querySelector("#emptyState");
     const countBadge = document.querySelector("#countBadge");
+    const cloudStatus = document.querySelector("#cloudStatus");
     const exportBtn = document.querySelector("#exportBtn");
 
     let entries = [];
@@ -782,12 +783,18 @@
 
     async function hydrateFromSheet() {
       try {
+        cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u4e2d";
         const payload = await loadSheetEntries();
-        if (!payload?.ok || !Array.isArray(payload.rows)) return;
+        if (!payload?.ok || !Array.isArray(payload.rows)) {
+          cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u5931\u6557";
+          return;
+        }
 
         entries = normalizeEntries(payload.rows);
         render();
+        cloudStatus.textContent = `\u96f2\u7aef\u5df2\u8f09\u5165 ${entries.length} \u7b46`;
       } catch (error) {
+        cloudStatus.textContent = "\u96f2\u7aef\u8f09\u5165\u5931\u6557";
         console.warn("Google Sheet load skipped:", error);
       }
     }

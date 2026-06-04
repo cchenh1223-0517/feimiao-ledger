@@ -1,4 +1,4 @@
-const CACHE_NAME = "hiyori-ledger-v22";
+const CACHE_NAME = "hiyori-ledger-v23";
 const APP_SHELL = [
   "./",
   "./index.html",
