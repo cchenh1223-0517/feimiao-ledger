@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>肥喵記帳簿</title>
+  <title>&#32933;&#21941;&#35352;&#24115;&#31807;</title>
   <meta name="theme-color" content="#ff9aa8" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="肥喵記帳簿" />
+  <meta name="apple-mobile-web-app-title" content="&#32933;&#21941;&#35352;&#24115;&#31807;" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="icon" href="./cat.png" type="image/png" />
+  <link rel="apple-touch-icon" href="./cat.png" />
   <script src="./database/sheet-config.js"></script>
   <style>
     :root {
@@ -666,7 +667,6 @@
       </summary>
       <div class="history-body">
         <div class="tool-row">
-          <button id="syncAllBtn" class="tool-btn" type="button">同步全部到雲端</button>
           <button id="exportBtn" class="tool-btn secondary" type="button">匯出備份</button>
         </div>
         <div id="emptyState" class="empty">還沒有記帳資料，先讓胖貓陪你記下第一筆吧。</div>
@@ -722,7 +722,6 @@
     const entryList = document.querySelector("#entryList");
     const emptyState = document.querySelector("#emptyState");
     const countBadge = document.querySelector("#countBadge");
-    const syncAllBtn = document.querySelector("#syncAllBtn");
     const exportBtn = document.querySelector("#exportBtn");
 
     let entries = [];
@@ -824,24 +823,6 @@
       } catch (error) {
         console.warn("Google Sheet sync skipped:", error);
       }
-    }
-
-    async function syncAllEntries() {
-      if (!SHEET_WEB_APP_URL) {
-        alert("\u5c1a\u672a\u8a2d\u5b9a\u96f2\u7aef\u8cc7\u6599\u5eab URL\uff0c\u8acb\u5148\u5230 database/sheet-config.js \u586b\u5165 Apps Script Web App URL\u3002");
-        return;
-      }
-
-      syncAllBtn.disabled = true;
-      syncAllBtn.textContent = "\u540c\u6b65\u4e2d...";
-
-      for (const entry of entries) {
-        await syncSheet(entry, "upsert");
-      }
-
-      syncAllBtn.disabled = false;
-      syncAllBtn.textContent = "\u540c\u6b65\u5168\u90e8\u5230\u96f2\u7aef";
-      alert(`\u5df2\u9001\u51fa ${entries.length} \u7b46\u8cc7\u6599\u3002\u8acb\u5230 Google Sheet \u78ba\u8a8d\u662f\u5426\u65b0\u589e\u3002`);
     }
 
     function exportBackup() {
@@ -1028,7 +1009,6 @@
       render();
     });
 
-    syncAllBtn.addEventListener("click", syncAllEntries);
     exportBtn.addEventListener("click", exportBackup);
 
     dateInput.value = todayString();

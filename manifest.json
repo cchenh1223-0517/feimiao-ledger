@@ -1,14 +1,20 @@
 {
-  "name": "肥喵記帳簿",
-  "short_name": "肥喵記帳",
-  "description": "A cute personal accounting app with expense analysis and local storage.",
+  "name": "\u80a5\u55b5\u8a18\u5e33\u7c3f",
+  "short_name": "\u80a5\u55b5\u8a18\u5e33",
+  "description": "Fei Miao cloud ledger app.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fff8ef",
-  "theme_color": "#ff8f9c",
+  "theme_color": "#ff9aa8",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "./cat.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "./cat.png",
       "sizes": "512x512",
