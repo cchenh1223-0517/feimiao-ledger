@@ -1,0 +1,19 @@
+{
+  "name": "肥喵記帳簿",
+  "short_name": "肥喵記帳",
+  "description": "A cute personal accounting app with expense analysis and local storage.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8ef",
+  "theme_color": "#ff8f9c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./cat.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

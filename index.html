@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>肥喵記帳簿</title>
+  <meta name="theme-color" content="#ff9aa8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="肥喵記帳簿" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <script src="./database/sheet-config.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #4b4038;
+      --muted: #8b7a70;
+      --line: rgba(128, 102, 82, 0.18);
+      --paper: rgba(255, 255, 255, 0.88);
+      --rose: #ff9aa8;
+      --rose-deep: #ec7182;
+      --mikan: #f5b66e;
+      --matcha: #9fbd94;
+      --sora: #8ebbd3;
+      --lavender: #b7a8d8;
+      --cream: #fff8ef;
+      --shadow: 0 18px 44px rgba(91, 67, 49, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 10% 6%, rgba(255, 205, 188, 0.7) 0 9rem, transparent 9.5rem),
+        radial-gradient(circle at 92% 4%, rgba(202, 226, 185, 0.7) 0 8rem, transparent 8.5rem),
+        radial-gradient(circle at 50% 100%, rgba(142, 187, 211, 0.2) 0 16rem, transparent 17rem),
+        linear-gradient(145deg, #fffaf3 0%, #fff0ed 42%, #f6fbef 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: min(100%, 52rem);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 8rem;
+      gap: 0.75rem;
+      align-items: center;
+      min-height: 12.5rem;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 28px;
+      padding: 1.25rem;
+      background:
+        linear-gradient(135deg, rgba(255, 250, 245, 0.96), rgba(255, 232, 224, 0.92)),
+        radial-gradient(circle, rgba(255, 154, 168, 0.22) 1.5px, transparent 1.5px);
+      background-size: auto, 18px 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.35rem;
+      color: #a16f66;
+      font-size: 0.84rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 8vw, 2.7rem);
+      font-weight: 950;
+      line-height: 1.05;
+    }
+
+    .hero-copy {
+      margin-top: 0.55rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .cat {
+      width: 8rem;
+      max-width: 34vw;
+      height: auto;
+      object-fit: contain;
+      border-radius: 22px;
+      background: #eef4cc;
+      box-shadow:
+        0 0 0 18px rgba(238, 244, 204, 0.46),
+        0 18px 34px rgba(123, 79, 55, 0.14);
+      mix-blend-mode: multiply;
+    }
+
+    .history-panel {
+      padding: 0;
+    }
+
+    .history-panel > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      min-height: 4.25rem;
+      padding: 1rem;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .history-panel > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .history-panel > summary::after {
+      content: "展開";
+      border-radius: 999px;
+      background: #fff4f5;
+      color: #c25f6c;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .history-panel[open] > summary::after {
+      content: "收合";
+    }
+
+    .history-body {
+      padding: 0 1rem 1rem;
+    }
+
+
+    .panel {
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 26px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .summary-card {
+      padding: 1rem;
+    }
+
+    .summary-card.primary {
+      color: #fff;
+      background: linear-gradient(135deg, #ff9aa8, #ffc3a8 58%, #f2ca77);
+    }
+
+    .summary-card.income {
+      background: rgba(241, 248, 236, 0.92);
+    }
+
+    .summary-card.balance {
+      background: rgba(239, 247, 252, 0.92);
+    }
+
+    .summary-label {
+      color: inherit;
+      font-size: 0.83rem;
+      font-weight: 900;
+      opacity: 0.78;
+    }
+
+    .summary-value {
+      margin-top: 0.35rem;
+      font-size: clamp(1.55rem, 8vw, 2.35rem);
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .section {
+      padding: 1rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+
+    h2 {
+      font-size: 1.18rem;
+      font-weight: 950;
+    }
+
+    .pill {
+      border: 0;
+      border-radius: 999px;
+      background: #fff4f5;
+      color: #c25f6c;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .tool-btn {
+      min-height: 2.75rem;
+      border: 1px solid rgba(236, 113, 130, 0.22);
+      border-radius: 16px;
+      background: rgba(255, 244, 245, 0.86);
+      color: #c25f6c;
+      font-size: 0.9rem;
+      font-weight: 950;
+    }
+
+    .tool-btn.secondary {
+      border-color: rgba(126, 95, 75, 0.16);
+      background: rgba(255, 255, 255, 0.78);
+      color: #7a6a61;
+    }
+
+    form {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      border-radius: 18px;
+      padding: 0.35rem;
+      background: #fff6f1;
+    }
+
+    .type-toggle input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .type-toggle label {
+      display: grid;
+      place-items: center;
+      margin: 0;
+      min-height: 2.65rem;
+      border-radius: 14px;
+      color: #8d7467;
+      font-weight: 950;
+      transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .type-toggle input:checked + label {
+      background: #fff;
+      color: var(--rose-deep);
+      box-shadow: 0 10px 22px rgba(127, 85, 62, 0.12);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 0.4rem;
+      color: #6e5d53;
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .field {
+      width: 100%;
+      min-height: 3rem;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 0.78rem 0.95rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .field:focus {
+      border-color: rgba(255, 154, 168, 0.84);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(255, 154, 168, 0.16);
+    }
+
+    .submit-btn {
+      width: 100%;
+      min-height: 3.25rem;
+      border: 0;
+      border-radius: 18px;
+      background: var(--rose);
+      color: #fff;
+      font-weight: 950;
+      box-shadow: 0 14px 26px rgba(255, 154, 168, 0.34);
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .submit-btn:hover {
+      background: var(--rose-deep);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.99);
+    }
+
+    .analysis-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .analysis-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .mini-stat {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.74);
+      padding: 0.85rem;
+    }
+
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .mini-stat strong {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 1.12rem;
+      font-weight: 950;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 0.34rem;
+    }
+
+    .bar-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 900;
+    }
+
+    .bar-track {
+      height: 0.72rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(128, 102, 82, 0.12);
+    }
+
+    .bar-fill {
+      height: 100%;
+      min-width: 0.35rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ff9aa8, #f5b66e);
+    }
+
+    .empty {
+      border: 1px dashed #e7cbbf;
+      border-radius: 20px;
+      background: #fff8f4;
+      padding: 1.3rem 1rem;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .record {
+      overflow: hidden;
+      border: 1px solid #f0ded7;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .record summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.55rem;
+      align-items: center;
+      min-height: 3.4rem;
+      padding: 0.55rem 0.72rem;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .record summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .record-title {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+
+    .record-icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 13px;
+      background: #fff1ef;
+      font-size: 1rem;
+    }
+
+    .record-name {
+      overflow: hidden;
+      font-size: 0.88rem;
+      font-weight: 950;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .record-date {
+      margin-top: 0.12rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .record-amount {
+      font-size: 0.92rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .income-text {
+      color: #5d8d59;
+    }
+
+    .expense-text {
+      color: #d56572;
+    }
+
+    .record-detail {
+      display: grid;
+      gap: 0.45rem;
+      border-top: 1px solid #f2e3dc;
+      padding: 0.72rem 0.8rem 0.85rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .detail-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .delete-btn {
+      width: 100%;
+      min-height: 2.6rem;
+      margin-top: 0.35rem;
+      border: 1px solid #ffd3d8;
+      border-radius: 15px;
+      background: #fff5f6;
+      color: #cf6571;
+      font-weight: 950;
+    }
+
+    @media (min-width: 640px) {
+      .app {
+        padding: 1.5rem;
+      }
+
+      .summary {
+        grid-template-columns: 1.4fr 1fr 1fr;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .analysis-grid {
+        grid-template-columns: 0.8fr 1.2fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Fei Miao Ledger</p>
+        <h1>肥喵記帳簿</h1>
+        <p class="hero-copy">把日常花費、收入和小小願望都整理好，胖貓陪你慢慢存下安心感。</p>
+      </div>
+      <img class="cat" src="./cat.png?v=11" alt="可愛灰白貓咪" />
+    </section>
+
+    <section class="summary">
+      <div class="panel summary-card primary">
+        <p class="summary-label">本月總支出</p>
+        <p id="monthlyExpense" class="summary-value">$0</p>
+      </div>
+      <div class="panel summary-card income">
+        <p class="summary-label">本月收入</p>
+        <p id="monthlyIncome" class="summary-value">$0</p>
+      </div>
+      <div class="panel summary-card balance">
+        <p class="summary-label">本月結餘</p>
+        <p id="monthlyBalance" class="summary-value">$0</p>
+      </div>
+    </section>
+
+    <section class="panel section">
+      <div class="section-head">
+        <h2>新增一筆</h2>
+        <span class="pill">雲端資料庫</span>
+      </div>
+      <form id="entryForm">
+        <div class="type-toggle" aria-label="收支類型">
+          <input id="typeExpense" name="type" type="radio" value="expense" checked />
+          <label for="typeExpense">支出</label>
+          <input id="typeIncome" name="type" type="radio" value="income" />
+          <label for="typeIncome">收入</label>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label class="field-label" for="amount">金額</label>
+            <input id="amount" class="field" type="number" inputmode="numeric" min="1" step="1" placeholder="例如 320" required />
+          </div>
+          <div>
+            <label class="field-label" for="date">日期</label>
+            <input id="date" class="field" type="date" required />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label class="field-label" for="category">主科目</label>
+            <select id="category" class="field" required></select>
+          </div>
+          <div>
+            <label class="field-label" for="subcategory">細分類</label>
+            <select id="subcategory" class="field" required></select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label class="field-label" for="payment">付款方式</label>
+            <select id="payment" class="field" required>
+              <option value="cash">現金</option>
+              <option value="credit">信用卡</option>
+              <option value="debit">金融卡</option>
+              <option value="transfer">轉帳</option>
+              <option value="mobile">行動支付</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="note">備註</label>
+            <input id="note" class="field" type="text" maxlength="60" placeholder="例如 買午餐、領薪水" />
+          </div>
+        </div>
+
+        <button class="submit-btn" type="submit">新增記帳</button>
+      </form>
+    </section>
+
+    <section class="panel section">
+      <div class="section-head">
+        <h2>費用分析</h2>
+        <span id="analysisMonth" class="pill">本月</span>
+      </div>
+      <div class="analysis-grid">
+        <div class="analysis-top">
+          <div class="mini-stat">
+            <span>最高支出科目</span>
+            <strong id="topCategory">尚無資料</strong>
+          </div>
+          <div class="mini-stat">
+            <span>平均單筆支出</span>
+            <strong id="averageExpense">$0</strong>
+          </div>
+        </div>
+        <div id="barList" class="bar-list"></div>
+      </div>
+    </section>
+
+    <details class="panel history-panel">
+      <summary>
+        <h2>歷史清單</h2>
+        <span id="countBadge" class="pill">0 筆</span>
+      </summary>
+      <div class="history-body">
+        <div class="tool-row">
+          <button id="syncAllBtn" class="tool-btn" type="button">同步全部到雲端</button>
+          <button id="exportBtn" class="tool-btn secondary" type="button">匯出備份</button>
+        </div>
+        <div id="emptyState" class="empty">還沒有記帳資料，先讓胖貓陪你記下第一筆吧。</div>
+        <ul id="entryList" class="history-list"></ul>
+      </div>
+    </details>
+  </main>
+
+  <script>
+    const SHEET_WEB_APP_URL = window.FEI_MIAO_SHEET_WEB_APP_URL || "";
+    const categories = {
+      expense: [
+        { id: "food", label: "餐飲", icon: "🍙", subs: ["早餐", "午餐", "晚餐", "咖啡飲料", "甜點零食", "聚餐"] },
+        { id: "transport", label: "交通", icon: "🚃", subs: ["捷運公車", "計程車", "油資", "停車", "高鐵火車", "共享交通"] },
+        { id: "daily", label: "日用品", icon: "🧴", subs: ["清潔用品", "保養洗沐", "居家用品", "文具", "寵物用品"] },
+        { id: "shopping", label: "購物", icon: "🛍️", subs: ["服飾", "美妝", "3C", "書籍", "雜貨", "禮物"] },
+        { id: "home", label: "居住帳單", icon: "🏠", subs: ["房租", "水電瓦斯", "網路電話", "管理費", "修繕"] },
+        { id: "fun", label: "娛樂休閒", icon: "🎮", subs: ["電影展覽", "遊戲", "旅行", "訂閱服務", "課程活動"] },
+        { id: "health", label: "醫療保健/藥品", icon: "💊", subs: ["掛號", "藥品", "保健食品", "牙科", "健身", "保險"] },
+        { id: "other", label: "其他支出", icon: "🌸", subs: ["捐款", "手續費", "臨時支出", "其他"] }
+      ],
+      income: [
+        { id: "salary", label: "薪資", icon: "💼", subs: ["正職薪水", "兼職", "獎金", "加班費"] },
+        { id: "side", label: "副業收入", icon: "✨", subs: ["接案", "販售", "投資配息", "租金"] },
+        { id: "gift", label: "禮金回饋", icon: "🎁", subs: ["紅包", "回饋金", "退款", "補助"] },
+        { id: "otherIncome", label: "其他收入", icon: "🍀", subs: ["其他"] }
+      ]
+    };
+
+    const payments = {
+      cash: "現金",
+      credit: "信用卡",
+      debit: "金融卡",
+      transfer: "轉帳",
+      mobile: "行動支付"
+    };
+
+    const form = document.querySelector("#entryForm");
+    const typeInputs = document.querySelectorAll("input[name='type']");
+    const amountInput = document.querySelector("#amount");
+    const categoryInput = document.querySelector("#category");
+    const subcategoryInput = document.querySelector("#subcategory");
+    const dateInput = document.querySelector("#date");
+    const paymentInput = document.querySelector("#payment");
+    const noteInput = document.querySelector("#note");
+    const monthlyExpense = document.querySelector("#monthlyExpense");
+    const monthlyIncome = document.querySelector("#monthlyIncome");
+    const monthlyBalance = document.querySelector("#monthlyBalance");
+    const analysisMonth = document.querySelector("#analysisMonth");
+    const topCategory = document.querySelector("#topCategory");
+    const averageExpense = document.querySelector("#averageExpense");
+    const barList = document.querySelector("#barList");
+    const entryList = document.querySelector("#entryList");
+    const emptyState = document.querySelector("#emptyState");
+    const countBadge = document.querySelector("#countBadge");
+    const syncAllBtn = document.querySelector("#syncAllBtn");
+    const exportBtn = document.querySelector("#exportBtn");
+
+    let entries = [];
+
+    function todayString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    }
+
+    function currentType() {
+      return document.querySelector("input[name='type']:checked").value;
+    }
+
+    function normalizeEntries(items) {
+      return items.map((item) => ({
+        id: item.id || String(Date.now() + Math.random()),
+        type: item.type || "expense",
+        amount: Number(item.amount) || 0,
+        category: item.category || "other",
+        subcategory: item.subcategory || "",
+        payment: item.payment || "cash",
+        date: item.date || todayString(),
+        note: item.note || "",
+        createdAt: item.createdAt || Date.now()
+      }));
+    }
+
+    function saveEntries() {}
+
+    function loadSheetEntries() {
+      if (!SHEET_WEB_APP_URL) return Promise.resolve(null);
+
+      return new Promise((resolve, reject) => {
+        const callbackName = `feiMiaoSheetCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement("script");
+        const separator = SHEET_WEB_APP_URL.includes("?") ? "&" : "?";
+
+        window[callbackName] = (payload) => {
+          cleanup();
+          resolve(payload);
+        };
+
+        function cleanup() {
+          delete window[callbackName];
+          script.remove();
+        }
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("Unable to load Google Sheet data."));
+        };
+
+        script.src = `${SHEET_WEB_APP_URL}${separator}callback=${callbackName}&_=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function hydrateFromSheet() {
+      try {
+        const payload = await loadSheetEntries();
+        if (!payload?.ok || !Array.isArray(payload.rows)) return;
+
+        entries = normalizeEntries(payload.rows);
+        render();
+      } catch (error) {
+        console.warn("Google Sheet load skipped:", error);
+      }
+    }
+
+    function sheetPayload(entry, action) {
+      const category = categoryOf(entry.type, entry.category);
+      return {
+        action,
+        id: entry.id,
+        type: entry.type,
+        amount: entry.amount,
+        category: entry.category,
+        categoryLabel: category.label,
+        subcategory: entry.subcategory,
+        payment: entry.payment,
+        paymentLabel: payments[entry.payment] || "\u73fe\u91d1",
+        date: entry.date,
+        note: entry.note,
+        createdAt: entry.createdAt,
+        updatedAt: Date.now()
+      };
+    }
+
+    async function syncSheet(entry, action) {
+      if (!SHEET_WEB_APP_URL) return;
+
+      try {
+        await fetch(SHEET_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(sheetPayload(entry, action))
+        });
+      } catch (error) {
+        console.warn("Google Sheet sync skipped:", error);
+      }
+    }
+
+    async function syncAllEntries() {
+      if (!SHEET_WEB_APP_URL) {
+        alert("\u5c1a\u672a\u8a2d\u5b9a\u96f2\u7aef\u8cc7\u6599\u5eab URL\uff0c\u8acb\u5148\u5230 database/sheet-config.js \u586b\u5165 Apps Script Web App URL\u3002");
+        return;
+      }
+
+      syncAllBtn.disabled = true;
+      syncAllBtn.textContent = "\u540c\u6b65\u4e2d...";
+
+      for (const entry of entries) {
+        await syncSheet(entry, "upsert");
+      }
+
+      syncAllBtn.disabled = false;
+      syncAllBtn.textContent = "\u540c\u6b65\u5168\u90e8\u5230\u96f2\u7aef";
+      alert(`\u5df2\u9001\u51fa ${entries.length} \u7b46\u8cc7\u6599\u3002\u8acb\u5230 Google Sheet \u78ba\u8a8d\u662f\u5426\u65b0\u589e\u3002`);
+    }
+
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `fei-miao-ledger-${todayString()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function money(value) {
+      return `$${Number(value).toLocaleString("zh-TW")}`;
+    }
+
+    function categoryOf(type, id) {
+      return categories[type].find((item) => item.id === id) || categories[type][categories[type].length - 1];
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function populateCategories() {
+      const type = currentType();
+      categoryInput.innerHTML = categories[type]
+        .map((item) => `<option value="${item.id}">${item.icon} ${item.label}</option>`)
+        .join("");
+      populateSubcategories();
+    }
+
+    function populateSubcategories() {
+      const category = categoryOf(currentType(), categoryInput.value);
+      subcategoryInput.innerHTML = category.subs
+        .map((sub) => `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`)
+        .join("");
+    }
+
+    function renderSummary(monthEntries) {
+      const expenses = monthEntries.filter((item) => item.type === "expense");
+      const incomes = monthEntries.filter((item) => item.type === "income");
+      const expenseTotal = expenses.reduce((sum, item) => sum + item.amount, 0);
+      const incomeTotal = incomes.reduce((sum, item) => sum + item.amount, 0);
+
+      monthlyExpense.textContent = money(expenseTotal);
+      monthlyIncome.textContent = money(incomeTotal);
+      monthlyBalance.textContent = money(incomeTotal - expenseTotal);
+      averageExpense.textContent = money(expenses.length ? Math.round(expenseTotal / expenses.length) : 0);
+    }
+
+    function renderAnalysis(monthEntries) {
+      const grouped = new Map();
+      monthEntries
+        .filter((item) => item.type === "expense")
+        .forEach((item) => {
+          const category = categoryOf("expense", item.category);
+          grouped.set(category.id, {
+            label: category.label,
+            icon: category.icon,
+            amount: (grouped.get(category.id)?.amount || 0) + item.amount
+          });
+        });
+
+      const rows = [...grouped.values()].sort((a, b) => b.amount - a.amount);
+      const max = rows[0]?.amount || 0;
+
+      topCategory.textContent = rows[0] ? `${rows[0].icon} ${rows[0].label}` : "尚無資料";
+      barList.innerHTML = rows.length
+        ? rows.map((row) => `
+          <div class="bar-row">
+            <div class="bar-meta">
+              <span>${row.icon} ${row.label}</span>
+              <span>${money(row.amount)}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(6, (row.amount / max) * 100)}%"></div></div>
+          </div>
+        `).join("")
+        : `<div class="empty">本月還沒有支出分析資料。</div>`;
+    }
+
+    function renderHistory() {
+      const sorted = [...entries].sort((a, b) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        return b.createdAt - a.createdAt;
+      });
+
+      countBadge.textContent = `${entries.length} 筆`;
+      emptyState.classList.toggle("hidden", entries.length > 0);
+      entryList.innerHTML = sorted.map((item) => {
+        const category = categoryOf(item.type, item.category);
+        const sign = item.type === "income" ? "+" : "-";
+        const amountClass = item.type === "income" ? "income-text" : "expense-text";
+        return `
+          <li>
+            <details class="record">
+              <summary>
+                <div class="record-title">
+                  <span class="record-icon">${category.icon}</span>
+                  <div>
+                    <div class="record-name">${category.label}${item.subcategory ? ` · ${escapeHtml(item.subcategory)}` : ""}</div>
+                    <div class="record-date">${item.date}</div>
+                  </div>
+                </div>
+                <div class="record-amount ${amountClass}">${sign}${money(item.amount)}</div>
+              </summary>
+              <div class="record-detail">
+                <div class="detail-line"><span>類型</span><strong>${item.type === "income" ? "收入" : "支出"}</strong></div>
+                <div class="detail-line"><span>付款方式</span><strong>${payments[item.payment] || "現金"}</strong></div>
+                <div class="detail-line"><span>備註</span><strong>${item.note ? escapeHtml(item.note) : "未填寫"}</strong></div>
+                <button class="delete-btn" data-id="${item.id}" type="button">刪除這筆</button>
+              </div>
+            </details>
+          </li>
+        `;
+      }).join("");
+    }
+
+    function render() {
+      const month = todayString().slice(0, 7);
+      const monthEntries = entries.filter((item) => item.date.slice(0, 7) === month);
+
+      analysisMonth.textContent = `${month} 本月`;
+      renderSummary(monthEntries);
+      renderAnalysis(monthEntries);
+      renderHistory();
+    }
+
+    typeInputs.forEach((input) => {
+      input.addEventListener("change", populateCategories);
+    });
+
+    categoryInput.addEventListener("change", populateSubcategories);
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const amount = Number(amountInput.value);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        amountInput.focus();
+        return;
+      }
+
+      const entry = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type: currentType(),
+        amount,
+        category: categoryInput.value,
+        subcategory: subcategoryInput.value,
+        payment: paymentInput.value,
+        date: dateInput.value,
+        note: noteInput.value.trim(),
+        createdAt: Date.now()
+      };
+
+      entries.push(entry);
+
+      saveEntries();
+      syncSheet(entry, "upsert");
+      form.reset();
+      dateInput.value = todayString();
+      populateCategories();
+      amountInput.focus();
+      render();
+    });
+
+    entryList.addEventListener("click", (event) => {
+      const button = event.target.closest(".delete-btn");
+      if (!button) {
+        const opened = event.target.closest("details.record");
+        if (opened && !opened.open) {
+          entryList.querySelectorAll("details.record[open]").forEach((detail) => {
+            if (detail !== opened) detail.open = false;
+          });
+        }
+        return;
+      }
+      const deleted = entries.find((item) => item.id === button.dataset.id);
+      entries = entries.filter((item) => item.id !== button.dataset.id);
+      saveEntries();
+      if (deleted) syncSheet(deleted, "delete");
+      render();
+    });
+
+    syncAllBtn.addEventListener("click", syncAllEntries);
+    exportBtn.addEventListener("click", exportBackup);
+
+    dateInput.value = todayString();
+    populateCategories();
+    render();
+    hydrateFromSheet();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
