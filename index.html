@@ -676,7 +676,8 @@
   </main>
 
   <script>
-    const SHEET_WEB_APP_URL = window.FEI_MIAO_SHEET_WEB_APP_URL || "";
+    const DEFAULT_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7zwItvfWd4M3agZsr6YSgOHux1n5ms2OMpXx18JTzAiK-srpBv1lW2Vpq8aGymrPH/exec";
+    const SHEET_WEB_APP_URL = window.FEI_MIAO_SHEET_WEB_APP_URL || DEFAULT_SHEET_WEB_APP_URL;
     const categories = {
       expense: [
         { id: "food", label: "餐飲", icon: "🍙", subs: ["早餐", "午餐", "晚餐", "咖啡飲料", "甜點零食", "聚餐"] },

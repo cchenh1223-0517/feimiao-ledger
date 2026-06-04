@@ -1,9 +1,8 @@
-const CACHE_NAME = "hiyori-ledger-v21";
+const CACHE_NAME = "hiyori-ledger-v22";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icon.svg",
   "./cat.png",
   "./database/sheet-config.js"
 ];
