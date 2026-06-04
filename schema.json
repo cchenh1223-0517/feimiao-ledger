@@ -1,0 +1,19 @@
+{
+  "databaseName": "喵喵家計簿_資料庫",
+  "sheetName": "記帳明細",
+  "primaryKey": "id",
+  "columns": [
+    { "key": "id", "label": "唯一ID", "type": "string" },
+    { "key": "type", "label": "收支類型", "type": "string", "values": ["expense", "income"] },
+    { "key": "amount", "label": "金額", "type": "number" },
+    { "key": "category", "label": "主科目代碼", "type": "string" },
+    { "key": "categoryLabel", "label": "主科目名稱", "type": "string" },
+    { "key": "subcategory", "label": "細分類", "type": "string" },
+    { "key": "payment", "label": "付款方式代碼", "type": "string" },
+    { "key": "paymentLabel", "label": "付款方式名稱", "type": "string" },
+    { "key": "date", "label": "記帳日期", "type": "date" },
+    { "key": "note", "label": "備註", "type": "string" },
+    { "key": "createdAt", "label": "建立時間", "type": "timestamp" },
+    { "key": "updatedAt", "label": "更新時間", "type": "timestamp" }
+  ]
+}
